@@ -1,0 +1,84 @@
+```{r}
+pacman::p_load(ggplot2, MASS, rcompanion, ordinal, janitor, brant, readr)
+```
+
+```{r}
+dt <- read_csv("/Users/ansonpoon/Desktop/capstone proj/Dataset/success.csv")
+dt$year <- factor(dt$year)
+```
+```{r}
+dt <- na.omit(dt)
+dt <- clean_names(dt)
+dt$indicator <- as.factor(dt$indicator)
+```
+
+```{r}
+dt <- dt[dt$technology_or_sector %in% c("Bioenergy", 
+                                              "Electric mobility", 
+                                              "Energy efficiency", 
+                                              "Energy storage and batteries", 
+                                              "Fossil fuels",
+                                              "Grid",
+                                              "Hydrogen and fuel cells",
+                                              "Nuclear",
+                                              "Other energy",
+                                              "Other renewables",
+                                              "Solar",
+                                              "Wind"),]
+```
+
+```{r}
+dt_percent <- dt[dt$unit %in% c("Percentage"),]
+dt_years <- dt[dt$unit %in% c("Years"),]
+```
+
+```{r}
+dt_percent <- dt_percent[rep(seq_len(nrow(dt_percent)), dt_percent$number_of_observations), ]
+```
+
+```{r}
+dt_percent <- dt_percent |> 
+  dplyr::select(country_name, indicator, technology_or_sector, year, value, number_of_observations)
+```
+
+
+```{r}
+dt_percent |> 
+  ggplot(aes(x = indicator, y = value)) +
+  geom_boxplot() +
+  scale_x_discrete(guide = guide_axis(n.dodge=3)) +
+  labs( y = "Probability of success", x = "Indictor of success")
+```
+
+```{r}
+dt_years <- dt_years[rep(seq_len(nrow(dt_years)), dt_years$number_of_observations),]
+```
+
+```{r}
+dt_years <- dt_years |> 
+  dplyr::select(country_name, technology_or_sector, year, value)
+```
+
+```{r}
+dt_years$year <- as.factor(dt_years$year)
+dt_years$country_name <- as.factor(dt_years$country_name)
+```
+
+```{r}
+dt_years_lm <- lm(value ~ technology_or_sector  + country_name, data = dt_years)
+summary(dt_years_lm)
+```
+
+```{r}
+dt_percent |> 
+  ggplot(aes(x = technology_or_sector, y = value)) +
+  geom_boxplot() +
+  scale_x_discrete(guide = guide_axis(n.dodge=3)) +
+  labs( y = "Probability of success", x = "Indictor of success")
+```
+```{r}
+dt_percent$country_name <- as.factor(dt_percent$country_name)
+```
+
+
+

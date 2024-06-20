@@ -1,0 +1,86 @@
+```{r}
+pacman::p_load(ggplot2, tidyverse, tidymodels, dplyr, recipes, gt, patchwork, janitor, glmnet, vip, GGRidge, paletteer)
+```
+
+```{r}
+options(scipen = 100, digits = 4)
+```
+
+```{r}
+dk <- read_csv("/Users/ansonpoon/Desktop/capstone proj/Dataset/funding.csv")
+```
+
+```{r}
+dk <- na.omit(dk)
+dk <- clean_names(dk)
+dk$year <- factor(dk$year)
+```
+
+```{r}
+dk <- dk[dk$technology_or_sector %in% c("Bioenergy", 
+                                              "Electric mobility", 
+                                              "Energy efficiency", 
+                                              "Energy storage and batteries", 
+                                              "Fossil fuels",
+                                              "Grid",
+                                              "Hydrogen and fuel cells",
+                                              "Nuclear",
+                                              "Other energy",
+                                              "Other renewables",
+                                              "Solar",
+                                              "Wind"),]
+```
+
+```{r}
+dk_percent <- dk[dk$unit %in% c("Percentage"),]
+dk_usd <- dk[dk$unit %in% c("USD"),]
+```
+
+```{r}
+dk_percent <- dk_percent |> 
+  dplyr::select(country_name  , technology_or_sector, funding_stage , year, value, number_of_observations)
+```
+
+```{r}
+dk_percent <- dk_percent[rep(seq_len(nrow(dk_percent)), dk_percent$number_of_observations), ]
+```
+```{r}
+dk_percent$country_name <- as.factor(dk_percent$country_name)
+dk_percent$technology_or_sector <- as.factor(dk_percent$technology_or_sector)
+dk_percent$funding_stage <- as.factor(dk_percent$funding_stage)
+```
+
+```{r}
+dk_percent |> 
+  ggplot(aes(x = technology_or_sector, y = value)) +
+  geom_boxplot() +
+  labs( y = "Probability of funding", x = "energy sector") +
+  scale_x_discrete(guide = guide_axis(n.dodge=4))
+```
+
+
+
+
+
+```{r}
+dk_percent_lm <- lm(sqrt(value) ~ as.numeric(country_name) + technology_or_sector + funding_stage + number_of_observations, data = dk_percent)
+summary(dk_percent_lm)
+```
+
+
+
+
+```{r}
+dk_usd <- dk_usd |> 
+  dplyr::select(country_name, technology_or_sector, year, number_of_observations, value)
+```
+
+
+
+```{r}
+dk_usd |> 
+  ggplot(aes(x = year, y = technology_or_sector, size = total_amount)) +
+  geom_point(color = "orange", alpha = 0.8) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+

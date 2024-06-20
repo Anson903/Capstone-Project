@@ -1,0 +1,121 @@
+```{r}
+pacman::p_load(ggplot2, tidyverse, tidymodels, dplyr, recipes, gt, patchwork, vip)
+```
+
+```{r}
+dg <- read_csv("/Users/ansonpoon/Desktop/capstone proj/Dataset/world_energy_consumption.csv")
+dg$country <- as.factor(dg$country)
+```
+
+```{r}
+dg_elec <- dg |> 
+  dplyr::select('country', 
+           'year',
+           'population',
+           'gdp',
+           'biofuel_electricity', 
+           'hydro_electricity',
+           'nuclear_electricity',
+           'solar_electricity',
+           'wind_electricity', 
+           'other_renewable_electricity',
+           'coal_electricity',
+           'gas_electricity',
+           'oil_electricity')
+```
+
+```{r}
+dg_elec$total <- rowSums(dg_elec[,5:13])
+dg_elec <- dg_elec[-which(is.na(dg_elec$total)),]
+```
+```{r}
+dg_elec$renewable<- rowSums(dg_elec[,5:10])
+dg_elec$not_renewable<- rowSums(dg_elec[,11:13])
+```
+
+```{r}
+dg_elec_1 <- dg_elec |> 
+  group_by(year) |> 
+   summarise(total_bio = sum(biofuel_electricity),
+             total_hydro = sum(hydro_electricity),
+             total_nuclear = sum(nuclear_electricity),
+             total_solar = sum(solar_electricity),
+             total_other_renewable = sum(other_renewable_electricity),
+             total_coal = sum(coal_electricity),
+             total_gas = sum(gas_electricity),
+             total_oil = sum(oil_electricity),
+             total_renewable = sum(renewable),
+             total_nonrenewable = sum(not_renewable))
+```
+
+```{r}
+dg_elec_1 |> 
+  pivot_longer(cols = 10:11, names_to = "indicator", values_to = "value") |> 
+  ggplot(aes(x = as.factor(year), y = value, fill = indicator)) +
+        geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Year", y = "Electricity Consumption", fill = "Energy Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+dg_consumption <- dg |> 
+  dplyr::select('country', 
+           'year',
+           'population',
+           'gdp',
+           'biofuel_consumption', 
+           'hydro_consumption',
+           'nuclear_consumption',
+           'solar_consumption',
+           'wind_consumption', 
+           'other_renewable_consumption',
+           'coal_consumption',
+           'gas_consumption',
+           'oil_consumption')
+```
+
+```{r}
+dg_consumption$total <- rowSums(dg_consumption[,5:13])
+dg_consumption <- dg_consumption[-which(is.na(dg_consumption$total)),]
+```
+```{r}
+dg_consumption$renewable<- rowSums(dg_consumption[,5:10])
+dg_consumption$not_renewable<- rowSums(dg_consumption[,11:13])
+```
+
+```{r}
+dg_consumption_1 <- dg_consumption |> 
+  group_by(year) |> 
+   summarise(total_bio = sum(biofuel_consumption),
+             total_hydro = sum(hydro_consumption),
+             total_nuclear = sum(nuclear_consumption),
+             total_solar = sum(solar_consumption),
+             total_other_renewable = sum(other_renewable_consumption),
+             total_coal = sum(coal_consumption),
+             total_gas = sum(gas_consumption),
+             total_oil = sum(oil_consumption),
+             total_renewable = sum(renewable),
+             total_nonrenewable = sum(not_renewable))
+```
+
+```{r}
+dg_consumption_1 |> 
+  pivot_longer(cols = 10:11, names_to = "indicator", values_to = "value") |> 
+  ggplot(aes(x = as.factor(year), y = value, fill = indicator)) +
+        geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Year", y = "Energy Consumption", fill = "Energy Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+dg_consumption$country <- as.numeric(dg_consumption$country)
+```
+
+
+```{r}
+dg_lm <- lm(renewable ~ year + population + country + gdp + total + not_renewable, data = dg_consumption)
+summary(dg_lm)
+```
+

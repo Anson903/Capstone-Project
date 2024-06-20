@@ -1,0 +1,64 @@
+```{r}
+pacman::p_load(tidyverse, tidymodels, vip, cluster, factoextra, dplyr, cluster)
+```
+
+```{r}
+df <- read_csv(("/Users/ansonpoon/Desktop/capstone proj/Dataset/creation.csv"))
+df$year <- as.factor(df$year)
+```
+```{r}
+df <- na.omit(df)
+df <- df |> 
+  mutate(total_observation = value * `number of observations`)
+```
+
+```{r}
+df_f <- df |> 
+  dplyr::select(`country name`, `technology or sector`, year, total_observation)
+```
+
+```{r}
+df_f <- df_f[df_f$`technology or sector` %in% c("Bioenergy", 
+                                              "Electric mobility", 
+                                              "Energy efficiency", 
+                                              "Grid",
+                                              "Energy storage and batteries", 
+                                              "Fossil fuels",
+                                              "Hydrogen and fuel cells",
+                                              "Nuclear",
+                                              "Other energy",
+                                              "Other renewables",
+                                              "Solar",
+                                              "Wind"),]
+```
+
+```{r}
+df_f <- clean_names(df_f)
+```
+```{r}
+df_f$Types_of_energy <- ifelse(df_f$technology_or_sector %in% c("Bioenergy","Electric mobility", "Energy efficiency", "Energy storage and batteries", "Hydrogen and fuel cells", "Nuclear",  "Other renewables", "Solar", "Wind"), "clean_energy", "traditional energy")
+```
+```{r}
+df_f |> 
+  ggplot(aes(fill=technology_or_sector, y=total_observation, x=year)) +
+  geom_bar(position = "fill", stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(y = "Proportion of energy start-up")
+```
+
+```{r}
+sum_no <- df_f |> 
+  group_by(year, Types_of_energy) |> 
+  summarise(Total_year = sum(total_observation))
+```
+```{r}
+sum_no |> 
+  ggplot(aes(x = year, y = Total_year, fill = Types_of_energy)) +
+  geom_bar(stat = "identity", position = "dodge")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(y = "Number of start-up foundation")
+```
+
+
+
+
